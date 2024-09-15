@@ -1,5 +1,7 @@
 import { type ClassValue, clsx as cn } from "clsx";
 
+export { cn };
+
 type ClassNameProps = { class?: string; className?: never } | { class?: never; className?: string };
 
 type StringToBoolean<T> = T extends "true" | "false" ? boolean : T;
