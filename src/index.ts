@@ -11,7 +11,7 @@ type TVariants<TVariantsConfig> = Partial<{
 }>;
 
 interface StyleVariantsConfig<TVariantsConfig extends Record<string, Record<string, ClassValue>>> {
-	extend?: Array<StyleVariantsFunction<TVariantsConfig>>;
+	extend?: Array<(props: Record<string, unknown>) => string>;
 	base?: ClassValue;
 	variants: TVariantsConfig;
 	defaults?: TVariants<TVariantsConfig>;
@@ -19,7 +19,7 @@ interface StyleVariantsConfig<TVariantsConfig extends Record<string, Record<stri
 }
 
 type StyleVariantsFunction<TVariantsConfig extends Record<string, Record<string, ClassValue>>> = (
-	props: TVariants<TVariantsConfig> & ClassNameProps,
+	props: TVariants<TVariantsConfig> & ClassNameProps & Record<string, unknown>,
 ) => string;
 
 export function styles<TVariantsConfig extends Record<string, Record<string, ClassValue>>>({
@@ -32,11 +32,15 @@ export function styles<TVariantsConfig extends Record<string, Record<string, Cla
 	return function (props) {
 		const variantNames = Object.keys(variants) as Array<keyof TVariantsConfig>;
 
-		const classNames: Array<ClassValue> = [base];
+		const classNames: Array<ClassValue> = [];
 
 		for (const fn of extend) {
 			const className = fn(props);
 			classNames.push(className);
+		}
+
+		if (base != null) {
+			classNames.push(base);
 		}
 
 		for (const variantName of variantNames) {
