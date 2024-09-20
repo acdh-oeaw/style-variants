@@ -1,7 +1,9 @@
+import type { ClassValue } from "clsx";
+import { expectTypeOf } from "expect-type";
 import { suite } from "uvu";
 import * as assert from "uvu/assert";
 
-import { styles } from "./index.js";
+import { compose, type GetVariantProps, styles } from "./index.js";
 
 const test = suite("styles");
 
@@ -178,22 +180,25 @@ test("should use defaults in variant combinations", () => {
 		variants({ color: "purple", isDisabled: false }),
 		"text-base text-purple-600 cursor-default",
 	);
+
+	expectTypeOf(variants).parameter(0).toMatchTypeOf<{
+		size?: "sm" | "md" | "lg" | undefined;
+		color?: "pink" | "purple" | undefined;
+		isDisabled?: boolean | undefined;
+		class?: ClassValue | undefined;
+		className?: ClassValue | undefined;
+	}>();
+
+	expectTypeOf<GetVariantProps<typeof variants>>().toEqualTypeOf<{
+		size?: "sm" | "md" | "lg" | undefined;
+		color?: "pink" | "purple" | undefined;
+		isDisabled?: boolean | undefined;
+	}>();
 });
 
-test("should extend variants", () => {
-	const focusIndicator = styles({
-		base: "outline-offset-2",
-		variants: {
-			isFocusVisible: {
-				false: "outline-0",
-				true: "outline-2",
-			},
-		},
-	});
-
+test("should add className prop", () => {
 	const variants = styles({
-		extend: [focusIndicator],
-		base: "text-black bg-white",
+		base: "font-medium",
 		variants: {
 			size: {
 				sm: "text-sm",
@@ -206,20 +211,80 @@ test("should extend variants", () => {
 		},
 	});
 
-	assert.is(variants({}), "outline-offset-2 text-black bg-white");
-	assert.is(variants({ isFocusVisible: false }), "outline-offset-2 outline-0 text-black bg-white");
-	assert.is(
-		variants({ size: "md", isFocusVisible: true }),
-		"outline-offset-2 outline-2 text-black bg-white text-base",
+	assert.is(variants({ size: "md", className: "custom" }), "font-medium text-base custom");
+});
+
+test("should run values through clsx", () => {
+	const variants = styles({
+		base: [{ "font-medium text-black": true }],
+		variants: {
+			size: {
+				sm: ["text-sm", { "hover:scale-105": true }],
+				md: ["text-base", { "hover:scale-105": true }],
+				lg: ["text-lg", { "hover:scale-105": true }],
+			},
+		},
+		combinations: [[{ size: "md" }, [{ custom: true }]]],
+	});
+
+	assert.is(variants({}), "font-medium text-black");
+	assert.is(variants({ size: "md" }), "font-medium text-black text-base hover:scale-105 custom");
+});
+
+test("should compose multiple style functions into a single one", () => {
+	const variants = compose(
+		styles({
+			variants: {
+				size: {
+					sm: "one-sm",
+					md: "one-md",
+				},
+				color: {
+					pink: "one-pink",
+				},
+			},
+		}),
+		styles({
+			variants: {
+				size: {
+					md: "two-md",
+					lg: "two-lg",
+				},
+			},
+		}),
+		styles({
+			variants: {
+				size: {
+					xs: "three-xs",
+				},
+				color: {
+					purple: "three-purple",
+				},
+				variant: {
+					primary: "three-primary",
+				},
+			},
+		}),
 	);
+
 	assert.is(
-		variants({ isDisabled: true, isFocusVisible: false }),
-		"outline-offset-2 outline-0 text-black bg-white opacity-50 pointer-events-none",
+		variants({ size: "lg", color: "pink", variant: "primary", className: { "bg-custom": true } }),
+		"one-pink two-lg three-primary bg-custom",
 	);
-	assert.is(
-		variants({ size: "lg", isDisabled: true, isFocusVisible: true }),
-		"outline-offset-2 outline-2 text-black bg-white text-lg opacity-50 pointer-events-none",
-	);
+
+	expectTypeOf(variants).parameter(0).toMatchTypeOf<{
+		size?: "sm" | "md" | "lg" | "xs" | undefined;
+		color?: "pink" | "purple" | undefined;
+		variant?: "primary" | undefined;
+		class?: ClassValue | undefined;
+		className?: ClassValue | undefined;
+	}>();
+
+	expectTypeOf<GetVariantProps<typeof variants>>().toEqualTypeOf<{
+		size?: "sm" | "md" | "lg" | "xs" | undefined;
+		color?: "pink" | "purple" | undefined;
+		variant?: "primary" | undefined;
+	}>();
 });
 
 test.run();
