@@ -1,5 +1,12 @@
 # @acdh-oeaw/style-variants
 
+## 0.1.0
+
+### Minor Changes
+
+- [`f61cb64`](https://github.com/acdh-oeaw/style-variants/commit/f61cb64b58ec4b377a9368c9ea46da3fa5882e1a)
+  Thanks [@stefanprobst](https://github.com/stefanprobst)! - replace extend with compose
+
 ## 0.0.2
 
 ### Patch Changes
