@@ -2,6 +2,9 @@
 	"name": "@acdh-oeaw/style-variants",
 	"version": "0.1.0",
 	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/acdh-oeaw/style-variants"
+	},
 	"type": "module",
 	"main": "./dist/index.js",
 	"exports": {
